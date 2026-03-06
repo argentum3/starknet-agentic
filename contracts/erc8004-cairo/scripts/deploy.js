@@ -52,15 +52,8 @@ function normalizeNetwork(raw) {
 }
 
 function resolveNetworkMetadata(chainId, explicitNetwork) {
-  const normalizedChainId = normalizeChainId(chainId);
-  const known = KNOWN_NETWORKS.get(normalizedChainId);
-  if (known) {
-    return known;
-  }
-
-  // starknet-devnet-rs may use the SN_SEPOLIA chain ID by default,
-  // but if STARKNET_NETWORK=devnet is set explicitly and the chain ID
-  // is not in KNOWN_NETWORKS, treat it as a private devnet.
+  // Explicit devnet override takes priority over chain ID lookup,
+  // because starknet-devnet-rs may reuse the SN_SEPOLIA chain ID.
   if (explicitNetwork === "devnet") {
     return {
       slug: "devnet",
@@ -68,6 +61,12 @@ function resolveNetworkMetadata(chainId, explicitNetwork) {
       voyagerContractBase: null,
       isPublicTestnet: false,
     };
+  }
+
+  const normalizedChainId = normalizeChainId(chainId);
+  const known = KNOWN_NETWORKS.get(normalizedChainId);
+  if (known) {
+    return known;
   }
 
   throw new Error(

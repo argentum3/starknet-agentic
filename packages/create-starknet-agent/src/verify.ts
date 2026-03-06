@@ -418,19 +418,18 @@ function truncateAddress(address: string): string {
 }
 
 /**
- * Detect network from RPC URL
+ * Detect network from RPC URL.
+ *
+ * Note: localhost / 127.0.0.1 alone is NOT enough to infer devnet — the user
+ * could be running a local Juno or Pathfinder full node.  We only return
+ * "devnet" when the URL contains the word "devnet" (e.g. http://my-devnet:5050).
+ * For ambiguous local URLs, we return undefined and let the user set
+ * STARKNET_NETWORK explicitly.
  */
 function detectNetworkFromRpcUrl(url: string): Network | undefined {
   if (url.includes("sepolia")) return "sepolia";
   if (url.includes("mainnet")) return "mainnet";
-  // Detect common devnet patterns (localhost, 127.0.0.1, devnet in URL)
-  if (
-    url.includes("127.0.0.1") ||
-    url.includes("localhost") ||
-    url.includes("devnet")
-  ) {
-    return "devnet";
-  }
+  if (url.includes("devnet")) return "devnet";
   return undefined;
 }
 

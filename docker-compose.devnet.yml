@@ -1,0 +1,43 @@
+# Docker Compose for starknet-devnet-rs
+#
+# Usage:
+#   docker compose -f docker-compose.devnet.yml up -d
+#
+# The devnet RPC endpoint will be available at http://localhost:5050/rpc
+# (or http://<host-ip>:5050/rpc for remote access).
+#
+# Predeployed accounts are printed to container logs:
+#   docker compose -f docker-compose.devnet.yml logs devnet
+#
+# To use with starknet-agentic, set in your .env:
+#   STARKNET_NETWORK=devnet
+#   STARKNET_RPC_URL=http://127.0.0.1:5050
+#
+# For remote devnet, replace 127.0.0.1 with the host IP/domain.
+
+services:
+  devnet:
+    image: shardlabs/starknet-devnet-rs:latest
+    container_name: starknet-devnet
+    ports:
+      - "${DEVNET_PORT:-5050}:5050"
+    command:
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "5050"
+      - "--seed"
+      - "${DEVNET_SEED:-0}"
+      - "--accounts"
+      - "${DEVNET_ACCOUNTS:-10}"
+      - "--initial-balance"
+      - "${DEVNET_INITIAL_BALANCE:-1000000000000000000000}"
+      - "--gas-price"
+      - "${DEVNET_GAS_PRICE:-100000000000}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5050/is_alive"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s

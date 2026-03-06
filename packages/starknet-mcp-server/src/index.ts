@@ -203,7 +203,7 @@ if (signerMode === "proxy") {
 
 // Enforce HTTPS for RPC URL in production to prevent eavesdropping on
 // account balances, transaction details, and nonce values.
-// Devnet is exempt since it runs locally / on private infrastructure.
+// Devnet is exempt since it runs on private infrastructure (local or remote).
 if (isProductionRuntime && !isDevnet) {
   const rpcUrl = new URL(env.STARKNET_RPC_URL);
   const isLoopback =

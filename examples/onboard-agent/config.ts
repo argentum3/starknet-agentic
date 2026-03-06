@@ -30,7 +30,7 @@ export const NETWORKS: Record<string, NetworkConfig> = {
     factory: process.env.AGENT_ACCOUNT_FACTORY_ADDRESS || "",
     registry: process.env.ERC8004_IDENTITY_REGISTRY_ADDRESS || "",
     rpc: process.env.STARKNET_RPC_URL || "http://127.0.0.1:5050",
-    explorer: "", // no explorer for local devnet
+    explorer: "", // no block explorer for devnet
   },
 };
 

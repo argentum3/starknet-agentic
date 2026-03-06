@@ -16,7 +16,9 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 async function main() {
-  console.log("Deploying AgentAccountFactory to Sepolia\n");
+  const isDevnet = (process.env.STARKNET_NETWORK || "").toLowerCase() === "devnet";
+  const networkLabel = isDevnet ? "Devnet" : "Sepolia";
+  console.log(`Deploying AgentAccountFactory to ${networkLabel}\n`);
   console.log("===================================================================\n");
 
   // ==================== ENV VALIDATION ====================
@@ -54,15 +56,15 @@ async function main() {
   // ==================== PROVIDER + ACCOUNT ====================
   const provider = new RpcProvider({ nodeUrl: rpcUrl });
 
-  // Hard-assert chain is SN_SEPOLIA
+  // Assert chain is SN_SEPOLIA (or devnet, which may use any chain ID)
   const chainId = await provider.getChainId();
   console.log("Chain ID:", chainId);
 
-  if (chainId !== "SN_SEPOLIA" && chainId !== "0x534e5f5345504f4c4941") {
+  if (!isDevnet && chainId !== "SN_SEPOLIA" && chainId !== "0x534e5f5345504f4c4941") {
     console.error(
       `Error: Expected SN_SEPOLIA chain, got ${chainId}`
     );
-    console.error("  This deploy script is Sepolia-only for v1.");
+    console.error("  This deploy script is Sepolia-only for v1. Set STARKNET_NETWORK=devnet for local devnet.");
     process.exit(1);
   }
 

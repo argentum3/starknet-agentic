@@ -125,6 +125,10 @@ export async function getTokenBalances(args: {
 }
 
 export function assertSepoliaChainId(chainId: string, network: string): void {
+  // Skip chain ID assertion for devnet — it may use any chain ID
+  if (network === "devnet") {
+    return;
+  }
   if (network !== "sepolia") {
     return;
   }

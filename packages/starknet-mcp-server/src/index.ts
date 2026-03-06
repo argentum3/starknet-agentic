@@ -104,14 +104,21 @@ const envSchema = z.object({
   KEYRING_TLS_CLIENT_CERT_PATH: z.string().min(1).optional(),
   KEYRING_TLS_CLIENT_KEY_PATH: z.string().min(1).optional(),
   KEYRING_TLS_CA_PATH: z.string().min(1).optional(),
+  // Explicit network override: "mainnet", "sepolia", or "devnet".
+  // When set to "devnet", HTTP RPC URLs are allowed and avnu defaults to sepolia endpoints.
+  STARKNET_NETWORK: z.enum(["mainnet", "sepolia", "devnet"]).optional(),
   NODE_ENV: z.string().optional(),
 });
 
-const isSepoliaRpc = (process.env.STARKNET_RPC_URL || "").toLowerCase().includes("sepolia");
-const defaultAvnuApiUrl = isSepoliaRpc
+const explicitNetwork = process.env.STARKNET_NETWORK?.toLowerCase();
+const isDevnet = explicitNetwork === "devnet";
+const isSepoliaRpc =
+  explicitNetwork === "sepolia" ||
+  (!isDevnet && (process.env.STARKNET_RPC_URL || "").toLowerCase().includes("sepolia"));
+const defaultAvnuApiUrl = isSepoliaRpc || isDevnet
   ? "https://sepolia.api.avnu.fi"
   : "https://starknet.api.avnu.fi";
-const defaultAvnuPaymasterUrl = isSepoliaRpc
+const defaultAvnuPaymasterUrl = isSepoliaRpc || isDevnet
   ? "https://sepolia.paymaster.avnu.fi"
   : "https://starknet.paymaster.avnu.fi";
 
@@ -139,6 +146,7 @@ const env = envSchema.parse({
   KEYRING_TLS_CLIENT_CERT_PATH: process.env.KEYRING_TLS_CLIENT_CERT_PATH,
   KEYRING_TLS_CLIENT_KEY_PATH: process.env.KEYRING_TLS_CLIENT_KEY_PATH,
   KEYRING_TLS_CA_PATH: process.env.KEYRING_TLS_CA_PATH,
+  STARKNET_NETWORK: process.env.STARKNET_NETWORK as "mainnet" | "sepolia" | "devnet" | undefined,
   NODE_ENV: process.env.NODE_ENV,
 });
 
@@ -195,7 +203,8 @@ if (signerMode === "proxy") {
 
 // Enforce HTTPS for RPC URL in production to prevent eavesdropping on
 // account balances, transaction details, and nonce values.
-if (isProductionRuntime) {
+// Devnet is exempt since it runs locally / on private infrastructure.
+if (isProductionRuntime && !isDevnet) {
   const rpcUrl = new URL(env.STARKNET_RPC_URL);
   const isLoopback =
     rpcUrl.hostname === "127.0.0.1" ||

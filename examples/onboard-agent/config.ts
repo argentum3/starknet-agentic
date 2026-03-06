@@ -26,6 +26,12 @@ export const NETWORKS: Record<string, NetworkConfig> = {
     rpc: "https://starknet-rpc.publicnode.com",
     explorer: "https://voyager.online",
   },
+  devnet: {
+    factory: process.env.AGENT_ACCOUNT_FACTORY_ADDRESS || "",
+    registry: process.env.ERC8004_IDENTITY_REGISTRY_ADDRESS || "",
+    rpc: process.env.STARKNET_RPC_URL || "http://127.0.0.1:5050",
+    explorer: "", // no explorer for local devnet
+  },
 };
 
 /** ERC-20 token addresses per network */
@@ -35,6 +41,11 @@ export const TOKENS: Record<string, Record<string, string>> = {
     STRK: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
   },
   mainnet: {
+    ETH: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+    STRK: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+  },
+  // starknet-devnet-rs predeployed fee tokens (same addresses as public networks)
+  devnet: {
     ETH: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
     STRK: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
   },

@@ -38,15 +38,40 @@ const KNOWN_NETWORKS = new Map([
   }],
 ]);
 
-function resolveNetworkMetadata(chainId) {
+/**
+ * Normalize a user-supplied network name to a canonical slug.
+ * Returns undefined for unrecognised values (caller decides how to handle).
+ */
+function normalizeNetwork(raw) {
+  if (!raw) return undefined;
+  const lower = String(raw).trim().toLowerCase();
+  if (lower === "mainnet" || lower === "main") return "mainnet";
+  if (lower === "sepolia") return "sepolia";
+  if (lower === "devnet" || lower === "local") return "devnet";
+  return undefined;
+}
+
+function resolveNetworkMetadata(chainId, explicitNetwork) {
   const normalizedChainId = normalizeChainId(chainId);
   const known = KNOWN_NETWORKS.get(normalizedChainId);
   if (known) {
     return known;
   }
 
+  // starknet-devnet-rs may use the SN_SEPOLIA chain ID by default,
+  // but if STARKNET_NETWORK=devnet is set explicitly and the chain ID
+  // is not in KNOWN_NETWORKS, treat it as a private devnet.
+  if (explicitNetwork === "devnet") {
+    return {
+      slug: "devnet",
+      label: "Starknet Devnet",
+      voyagerContractBase: null,
+      isPublicTestnet: false,
+    };
+  }
+
   throw new Error(
-    `Unsupported chain ID ${normalizedChainId}. Add it to KNOWN_NETWORKS and define explicit deployment safety gates before deploying.`,
+    `Unsupported chain ID ${normalizedChainId}. Set STARKNET_NETWORK=devnet for local devnet, or add it to KNOWN_NETWORKS.`,
   );
 }
 
@@ -158,7 +183,7 @@ async function main() {
   const requestedNetwork = normalizeNetwork(rawRequestedNetwork);
   if (rawRequestedNetwork && !requestedNetwork) {
     console.error(
-      `❌ Error: STARKNET_NETWORK must be 'sepolia' or 'mainnet' (received '${rawRequestedNetwork}').`,
+      `❌ Error: STARKNET_NETWORK must be 'sepolia', 'mainnet', or 'devnet' (received '${rawRequestedNetwork}').`,
     );
     process.exit(1);
   }
@@ -188,7 +213,7 @@ async function main() {
 
   // Check that communication with provider is OK
   const chainId = await provider.getChainId();
-  const network = resolveNetworkMetadata(chainId);
+  const network = resolveNetworkMetadata(chainId, requestedNetwork);
   const chainIdHex = normalizeChainId(chainId);
 
   const reviewMetadata = enforceDeploymentSafetyGate(network);

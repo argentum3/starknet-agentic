@@ -30,14 +30,20 @@ if (!process.env.STARKNET_RPC_URL) {
   process.exit(1);
 }
 
-// Setup provider for Sepolia testnet
+// Setup provider — auto-detect network from STARKNET_NETWORK or RPC URL.
+// For devnet, we omit chainId so the provider auto-detects from the node.
 export const rpcUrl = process.env.STARKNET_RPC_URL;
-export const provider = new RpcProvider({
-  nodeUrl: rpcUrl,
-  chainId: constants.StarknetChainId.SN_SEPOLIA,
-});
+const explicitNetwork = (process.env.STARKNET_NETWORK || '').toLowerCase();
+const isDevnet = explicitNetwork === 'devnet';
 
-console.log(`📡 Connected to: ${rpcUrl}`);
+const providerOptions = { nodeUrl: rpcUrl };
+if (!isDevnet) {
+  // For known public networks, pin the chain ID for safety
+  providerOptions.chainId = constants.StarknetChainId.SN_SEPOLIA;
+}
+export const provider = new RpcProvider(providerOptions);
+
+console.log(`📡 Connected to: ${rpcUrl}${isDevnet ? ' (devnet)' : ''}`);
 
 // Load contract ABIs
 function loadAbi(contractName) {

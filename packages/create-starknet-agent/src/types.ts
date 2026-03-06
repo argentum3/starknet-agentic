@@ -2,7 +2,7 @@
  * Types for create-starknet-agent CLI
  */
 
-export type Network = "mainnet" | "sepolia" | "custom";
+export type Network = "mainnet" | "sepolia" | "devnet" | "custom";
 
 export type Template = "minimal" | "defi" | "full";
 
@@ -67,6 +67,7 @@ export interface GeneratedFiles {
 export const RPC_URLS: Record<Exclude<Network, "custom">, string> = {
   mainnet: "https://starknet-mainnet.g.alchemy.com/starknet/version/rpc/v0_7/YOUR_API_KEY",
   sepolia: "https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_7/YOUR_API_KEY",
+  devnet: "http://127.0.0.1:5050",
 };
 
 export const TOKEN_ADDRESSES = {
@@ -80,6 +81,11 @@ export const TOKEN_ADDRESSES = {
     ETH: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
     STRK: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
   },
+  // starknet-devnet-rs predeployed fee tokens use the same addresses
+  devnet: {
+    ETH: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+    STRK: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+  },
 };
 
 export const AVNU_URLS = {
@@ -88,6 +94,10 @@ export const AVNU_URLS = {
     paymaster: "https://starknet.paymaster.avnu.fi",
   },
   sepolia: {
+    api: "https://sepolia.api.avnu.fi",
+    paymaster: "https://sepolia.paymaster.avnu.fi",
+  },
+  devnet: {
     api: "https://sepolia.api.avnu.fi",
     paymaster: "https://sepolia.paymaster.avnu.fi",
   },

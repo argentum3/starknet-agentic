@@ -546,6 +546,13 @@ async function executeTransaction(
     return result.transaction_hash;
   }
 
+  // Devnet has no paymaster service — gasfree mode is unsupported.
+  // Fall back to standard execution since devnet gas is effectively free.
+  if (isDevnet) {
+    const result = await account.execute(Array.isArray(calls) ? calls : [calls]);
+    return result.transaction_hash;
+  }
+
   const callsArray = Array.isArray(calls) ? calls : [calls];
   const paymasterDetails = isSponsored
     ? { feeMode: { mode: "sponsored" as const } }
@@ -2502,7 +2509,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const userMessage = formatErrorMessage(errorMessage);
+    let userMessage = formatErrorMessage(errorMessage);
+
+    // On devnet, append context for tools that depend on external services
+    // (avnu liquidity, Vesu pools, paymaster) so agents understand why it failed.
+    if (isDevnet) {
+      const devnetUnsupported: Record<string, string> = {
+        starknet_swap: "Swaps require avnu liquidity which is not available on devnet.",
+        starknet_get_quote: "Swap quotes require avnu liquidity which is not available on devnet.",
+        starknet_build_swap_calls: "Swap quotes require avnu liquidity which is not available on devnet.",
+        starknet_vesu_deposit: "Vesu lending pools are not deployed on devnet.",
+        starknet_vesu_withdraw: "Vesu lending pools are not deployed on devnet.",
+        starknet_vesu_positions: "Vesu lending pools are not deployed on devnet.",
+      };
+      const hint = devnetUnsupported[name];
+      if (hint) {
+        userMessage += ` [DEVNET] ${hint}`;
+      }
+    }
 
     // Log the full error to stderr for operators; never expose to the agent.
     log({ level: "error", event: "tool.error", tool: name, details: { error: errorMessage } });
